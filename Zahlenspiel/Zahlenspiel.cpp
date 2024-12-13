@@ -1,103 +1,122 @@
-#include <iostream>
-#include <stdio.h>
-#include <time.h> 
 #include <cstdlib>
-#include <Windows.h>
+#include <ctime>
+#include <iostream>
+#include <limits>
+#include <locale>
 
-using namespace std;
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
-void RunMenu();
-char Menu();
-void RunGame();
-int GetUserGuess();
-bool ValidateUserGuess(int guess, int rightResult);
+void clearScreen();
+void runMenu();
+void runGame();
+int getUserGuess();
+char displayMenu();
+bool validateUserGuess(int guess, int rightResult);
 
 int maxNumber;
 
 int main() {
+  std::setlocale(LC_ALL, "de_DE.UTF-8");
 
-	srand(time(NULL));
+#ifdef _WIN32
+  SetConsoleOutputCP(CP_UTF8);
+#endif
 
-	RunMenu();
+  std::srand(static_cast<unsigned int>(std::time(0)));
 
-	return(0);
+  runMenu();
+
+  return 0;
 }
 
-void RunMenu() {
-
-	while (true) {
-
-		char input = Menu();
-		if (input == 'P' || input == 'p')
-			RunGame();
-		else if (input == 'Q' || input == 'q')
-			break;
-		else
-			cout << "\nError bei '" << input << "' bitte versuche es mit P oder Q\n";
-	}
+void clearScreen() {
+#ifdef _WIN32
+  system("cls");
+#else
+  std::cout << "\033[2J\033[1;1H";
+#endif
 }
 
-char Menu() {
-
-	char input = ' ';
-	cout << "MENU\n\n(P)lay\n(Q)uit\n\n";
-	cout << "Input: ";
-	cin >> input;
-
-	system("cls");
-	return input;
+void runMenu() {
+  while (true) {
+    char input = displayMenu();
+    if (input == 'P' || input == 'p') {
+      runGame();
+    } else if (input == 'Q' || input == 'q') {
+      std::cout << "Spiel beendet. Auf Wiedersehen!" << std::endl;
+      break;
+    } else {
+      std::cout << "\nUngültige Eingabe: '" << input
+                << "'. Bitte versuche es mit P oder Q.\n";
+    }
+  }
 }
 
-void RunGame() {
+char displayMenu() {
+  char input = ' ';
+  std::cout << "\nMENU\n\n(P)lay\n(Q)uit\n\n";
+  std::cout << "Input: ";
+  std::cin >> input;
 
-	cout << endl << "Gebe deine maximale Zahl an: ";
-	cin >> maxNumber;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-
-	int randomNumber = rand() % maxNumber + 1;
-	int guess;
-	int tries = 0;
-	cout << "\nDie gesuchte Zahl ist zwischen 1 und " << maxNumber << " (eingeschlossen 1 und " << maxNumber << ").\n\n";
-	do {
-
-		guess = GetUserGuess();
-		tries++;
-	} while (!ValidateUserGuess(guess, randomNumber));
-	cout << "Du hast " << tries << " Versuche gebraucht.\nIn dem Zahlenraum von 1 bis " << maxNumber << "." << endl << "\n";
+  clearScreen();
+  return input;
 }
 
-int GetUserGuess() {
+void runGame() {
+  std::cout << "\nGebe deine maximale Zahl ein: ";
+  while (!(std::cin >> maxNumber) || maxNumber <= 1) {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Ungültige Eingabe. Bitte gib eine Zahl größer als 1 ein: ";
+  }
 
-	int guess;
-	cout << "Deine Zahl: ";
-	cin >> guess;
+  int randomNumber = std::rand() % maxNumber + 1;
+  int guess;
+  int tries = 0;
 
-	return guess;
+  do {
+    guess = getUserGuess();
+
+    tries++;
+  } while (!validateUserGuess(guess, randomNumber));
+
+  std::cout << "Du hast " << tries
+            << " Versuche benötigt, um die Zahl zu erraten.\n\n";
 }
 
-bool ValidateUserGuess(int guess, int rightResult) {
+int getUserGuess() {
+  int guess;
 
-	if (guess == rightResult) {
-		system("cls");
-		cout << "\nDein Eingabe von " << guess << " ist richtig.\n";
-		return true;
-	}
+  std::cout << "Deine Zahl: ";
+  while (!(std::cin >> guess) || guess <= 0) {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Ungültige Eingabe: '" << guess
+              << "' Bitte versuche es mit einer positiven Zahl.";
+  }
+  return guess;
+}
 
-	else if (guess < rightResult) {
-		system("cls");
-		cout << "\nDie gesuchte Zahl ist groesser als " << guess << ".\n";
-		return false;
-	}
+bool validateUserGuess(int guess, int rightResult) {
+  clearScreen();
 
-	else if (guess > rightResult) {
-		system("cls");
-		cout << "\nDie gesuchte Zahl ist kleiner als " << guess << ".\n";
-		return false;
-	}
-
-	else {
-		system("cls");
-		cout << "\nError Input (Bei der Zahl: " << guess << ")\n";
-		return false;
-	}
+  if (guess == rightResult) {
+    std::cout << "\nDie gesuchte Zahl war zwischen 1 und " << maxNumber
+            << " (eingeschlossen 1 und " << maxNumber << ").";
+    std::cout << "\nDeine Eingabe von " << guess << " ist korrekt.\n";
+    return true;
+  } else if (guess < rightResult) {
+    std::cout << "\nDie gesuchte Zahl ist zwischen 1 und " << maxNumber
+            << " (eingeschlossen 1 und " << maxNumber << ").";
+    std::cout << "\nDie gesuchte Zahl ist größer als " << guess << ".\n";
+  } else {
+    std::cout << "\nDie gesuchte Zahl ist zwischen 1 und " << maxNumber
+            << " (eingeschlossen 1 und " << maxNumber << ").";
+    std::cout << "\nDie gesuchte Zahl ist kleiner als " << guess << ".\n";
+  }
+  return false;
 }
