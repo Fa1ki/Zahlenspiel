@@ -16,4 +16,4 @@ cmake -G "MinGW Makefiles" ..
 cmake --build . --config Release
 
 echo Starte das Programm...
-"%BUILD_DIR%\Playground.exe"
+"%BUILD_DIR%\Zahlenspiel.exe"
